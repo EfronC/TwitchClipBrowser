@@ -7,7 +7,7 @@ from flask import Flask
 from importlib import import_module
 from twitchAPI.twitch import Twitch
 from twitchAPI.oauth import UserAuthenticator, validate_token, refresh_access_token
-from twitchAPI.types import AuthScope, TwitchAuthorizationException
+from twitchAPI.types import AuthScope, TwitchAuthorizationException, InvalidTokenException
 
 async def init_twitch(auth_step=False):
     token = os.getenv('TWITCH_TOKEN')
@@ -21,8 +21,8 @@ async def init_twitch(auth_step=False):
     if (token and refresh) and not auth_step:
         try:
             await twitch.set_user_authentication(token, target_scope, refresh)
-        except TwitchAuthorizationException:
-            token, refresh = refresh_access_token(refresh, app_id, secret)
+        except (TwitchAuthorizationException, InvalidTokenException) as error:
+            token, refresh = await refresh_access_token(refresh, app_id, secret)
             print("New Token: ", token)
             print("New Refresh: ", refresh)
             await twitch.set_user_authentication(token, target_scope, refresh)

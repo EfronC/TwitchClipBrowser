@@ -3,7 +3,7 @@ import os
 from twitchAPI.twitch import Twitch
 from twitchAPI.oauth import UserAuthenticator
 from twitchAPI.types import AuthScope
-from apps.twitchc.twitch_util import TwitchUserAuthenticator
+from apps.twitch_utils.utils import *
 
 async def get_users(twitch, username: str = ""):
 	limit = 20
@@ -21,27 +21,23 @@ async def get_users(twitch, username: str = ""):
 
 
 async def get_clips(twitch, broadcaster_id=None, game_id=None):
-	c = 0
-	clips = []
 	try:
-		async for i in twitch.get_clips(None, "489635", first=5):
-			c += 1
-			clips.append(i.to_dict())
-			if c >= 20:
-				break
-		return clips
+		clips = await loop_agen(twitch.get_clips(None, "489635", first=5))
+		if clips:
+			return clips
+		else:
+			raise Exception("Fetching Failed")
 	except Exception as e:
 		print(e)
 		raise e
 
 async def get_games(twitch, name: str = "Ark"):
 	try:
-		async for i in twitch.get_games(None, names=[name,]):
-			print(i)
-			print(i.to_dict())
-
-		clips = []
-		return clips
+		games = await loop_agen(twitch.search_categories(query=name))
+		if games:
+			return games
+		else:
+			raise Exception("Fetching Failed")
 	except Exception as e:
 		print(e)
 		raise e

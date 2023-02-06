@@ -11,11 +11,20 @@ from apps.browser.views import *
 import json
 from apps import init_twitch
 
-@blueprint.route('/api/game/games/', methods=('GET', ))
+@blueprint.route('/api/twitch/games/', methods=('GET', ))
 async def get_games_dashboard():
-    twitch, auth = await init_twitch()
-    games = await get_games(twitch)
-    return render_template('browser/dashboard.html', data={"success":True})
+    try:
+        game = request.args.get("game", False)
+        if game:
+            twitch, auth = await init_twitch()
+            games = await get_games(twitch, game)
+            data = {"games": games}
+            return data, 200
+        else:
+            return {"error": "Missing data"}, 400
+    except Exception as e:
+        print(e)
+        return {"error": "Something happened"}, 500
 
 @blueprint.route('/api/clip/clips/', methods=('GET', ))
 async def get_clips_dashboard():
